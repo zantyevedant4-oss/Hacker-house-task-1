@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hacker House Goa 2026 - ID Card Generator</title>
+    <!-- Tailwind CSS for modern, scannable styling -->
+    <script src="https://jsdelivr.net"></script>
+    <style>
+        @import url('https://googleapis.com');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .brand-font { font-family: 'Space Grotesk', sans-serif; }
+    </style>
+</head>
+<body class="bg-[#0B0F19] text-gray-100 min-h-screen flex flex-col items-center justify-center p-4 md:p-8">
+
+    <div class="max-w-5xl w-full grid grid-cols-1 md:grid-cols-2 gap-8 bg-[#131A2C] p-6 md:p-8 rounded-2xl border border-gray-800 shadow-2xl">
+        
+        <!-- LEFT: INPUT CONTROLS -->
+        <div class="flex flex-col justify-between space-y-6">
+            <div>
+                <h1 class="text-3xl font-extrabold brand-font text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-emerald-400">
+                    HH GOA 2026
+                </h1>
+                <p class="text-gray-400 mt-2 text-sm md:text-base">
+                    Task #1 Open Trial: Generate your verifiable Builder ID Card. Fill in your hacker metrics below.
+                </p>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Full Name</label>
+                    <input type="text" id="nameInput" value="vedant zantye" placeholder="Enter your name" 
+                           class="w-full bg-[#1E293B] border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-teal-500 transition-colors">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Core Tech Stack / Role</label>
+                    <input type="text" id="stackInput" value="AI Agent Mechanic × Next.js" placeholder="e.g., AI × Crypto Engineer" 
+                           class="w-full bg-[#1E293B] border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-teal-500 transition-colors">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Profile Photo</label>
+                    <div class="relative w-full bg-[#1E293B] border-2 border-dashed border-gray-700 hover:border-teal-500 rounded-lg p-4 text-center cursor-pointer transition-colors">
+                        <input type="file" id="imageInput" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer">
+                        <p class="text-gray-400 text-sm" id="uploadStatus">📸 Click to upload portrait photo</p>
+                    </div>
+                </div>
+            </div>
+
+            <button id="downloadBtn" class="w-full bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-gray-950 font-bold py-3 px-6 rounded-xl shadow-lg transition-all transform active:scale-98 brand-font uppercase tracking-wider">
+                Download Builder ID (.PNG)
+            </button>
+        </div>
+
+        <!-- RIGHT: INTERACTIVE LIVE CANVAS PREVIEW -->
+        <div class="flex flex-col items-center justify-center bg-[#0B0F19] rounded-xl p-4 border border-gray-800">
+            <p class="text-xs text-gray-500 mb-3 uppercase tracking-widest font-mono">Live Generation Preview</p>
+            <div class="relative w-full max-w-[340px] aspect-[3/4] shadow-2xl rounded-xl overflow-hidden">
+                <canvas id="idCanvas" class="w-full h-full block"></canvas>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Hidden native image element used to safely load uploaded files into memory -->
+    <img id="avatarImage" src="" alt="avatar" class="hidden">
+
+    <script>
+        const canvas = document.getElementById('idCanvas');
+        const ctx = canvas.getContext('2d');
+        const imgInput = document.getElementById('imageInput');
+        const avatarImg = document.getElementById('avatarImage');
+        const uploadStatus = document.getElementById('uploadStatus');
+
+        // Set high resolution internally for perfect crisp canvas rendering exports
+        canvas.width = 600;
+        canvas.height = 800;
+
+        const state = {
+            name: "Alex Builder",
+            stack: "AI Agent Mechanic × Next.js",
+            hasCustomImage: false
+        };
+
+        function drawIDCard() {
+            // 1. Base Canvas Background Color (Dark Theme)
+            ctx.fillStyle = '#0F172A';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 2. Linear Gradient Top Aesthetic Accent Ring Border
+            ctx.strokeStyle = '#2DD4BF';
+            ctx.lineWidth = 16;
+            ctx.strokeRect(0, 0, canvas.width, canvas.height);
+
+            // 3. Cyberpunk Geometric Accent Elements
+            ctx.fillStyle = 'rgba(45, 212, 191, 0.04)';
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(250, 0);
+            ctx.lineTo(180, 120);
+            ctx.lineTo(0, 120);
+            ctx.fill();
+
+            // 4. Draw Avatar Frame Background / Image Processing
+            const photoX = 120;
+            const photoY = 160;
+            const photoW = 360;
+            const photoH = 380;
+
+            ctx.fillStyle = '#1E293B';
+            ctx.fillRect(photoX, photoY, photoW, photoH);
+            ctx.strokeStyle = '#334155';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(photoX, photoY, photoW, photoH);
+
+            if (state.hasCustomImage) {
+                // Perform smart client-side object scaling to perfectly fill the canvas avatar area
+                const imgRatio = avatarImg.width / avatarImg.height;
+                const rectRatio = photoW / photoH;
+                let sx, sy, sw, sh;
+
+                if (imgRatio > rectRatio) {
+                    sh = avatarImg.height;
+                    sw = sh * rectRatio;
+                    sx = (avatarImg.width - sw) / 2;
+                    sy = 0;
+                } else {
+                    sw = avatarImg.width;
+                    sh = sw / rectRatio;
+                    sx = 0;
+                    sy = (avatarImg.height - sh) / 2;
+                }
+                ctx.drawImage(avatarImg, sx, sy, sw, sh, photoX, photoY, photoW, photoH);
+            } else {
+                // Default fallback icon graphic placeholder 
+                ctx.fillStyle = '#475569';
+                ctx.font = '80px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('👤', photoX + (photoW / 2), photoY + (photoH / 2) - 10);
+                ctx.font = 'bold 16px "Space Grotesk"';
+                ctx.fillStyle = '#94A3B8';
+                ctx.fillText('UPLOAD PHOTO', photoX + (photoW / 2), photoY + (photoH / 2) + 60);
+            }
+
+            // 5. Draw Dynamic Identity Text Information
+            ctx.textAlign = 'left';
+            
+            // Header Core Brand
+            ctx.fillStyle = '#2DD4BF';
+            ctx.font = 'bold 24px "Space Grotesk"';
+            ctx.fillText('HACKER HOUSE GOA // 2026', 120, 95);
+
+            // User Name Label
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 36px "Space Grotesk"';
+            const cleanName = state.name.toUpperCase().substring(0, 22);
+            ctx.fillText(cleanName, 120, 605);
+
+            // User Core Stack Subheader Text
+            ctx.fillStyle = '#94A3B8';
+            ctx.font = '600 20px "Plus Jakarta Sans"';
+            const cleanStack = state.stack.substring(0, 32);
+            ctx.fillText(cleanStack, 120, 645);
+
+            // 6. Footer Layout Metrics, Meta-data, Decorative Barcode Design Elements
+            ctx.strokeStyle = 'rgba(51, 65, 85, 0.5)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(120, 685);
+            ctx.lineTo(480, 685);
+            ctx.stroke();
+
+            // Status Sub-badges
+            ctx.fillStyle = '#34D399';
+            ctx.font = 'bold 14px "Space Grotesk"';
+            ctx.fillText('• STATUS: VERIFIED BUILDER', 120, 725);
+
+            ctx.fillStyle = '#64748B';
+            ctx.font = '12px "Space Grotesk"';
+            ctx.fillText('PASS NO: #247-' + Math.floor(1000 + Math.random() * 9000), 120, 745);
+
+            // Mock Custom UI Identity Barcode Strip
+            ctx.fillStyle = '#334155';
+            for (let i = 0; i < 28; i++) {
+                const barWidth = (i % 3 === 0) ? 4 : (i % 2 === 0) ? 2 : 1;
+                ctx.fillRect(360 + (i * 4), 708, barWidth, 35);
+            }
+        }
+
+        // Live Dynamic State Sync Event Hooks
+        document.getElementById('nameInput').addEventListener('input', (e) => {
+            state.name = e.target.value || "Alex Builder";
+            drawIDCard();
+        });
+
+        document.getElementById('stackInput').addEventListener('input', (e) => {
+            state.stack = e.target.value || "AI Agent Mechanic";
+            drawIDCard();
+        });
+
+        imgInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                uploadStatus.innerText = "⚡ Processing Photo...";
+                reader.onload = function(event) {
+                    avatarImg.src = event.target.result;
+                    avatarImg.onload = function() {
+                        state.hasCustomImage = true;
+                        uploadStatus.innerText = "✅ " + file.name.substring(0, 15) + "... loaded";
+                        drawIDCard();
+                    };
+                };
